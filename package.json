@@ -1,5 +1,5 @@
 {
-  "name": "npm-malware-checker",
+  "name": "@krisbyte/malscanner",
   "version": "0.0.1",
   "description": "",
   "main": "index.js",
