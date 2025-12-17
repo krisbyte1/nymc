@@ -1,0 +1,15 @@
+{
+  "name": "npm-malware-checker",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "25.0.3",
+    "typescript": "5.9.3"
+  }
+}
