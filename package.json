@@ -5,7 +5,8 @@
   "main": "nymc.js",
   "scripts": {
     "build": "tsc",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "prepare": "husky"
   },
   "author": "",
   "license": "ISC",
