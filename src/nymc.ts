@@ -8,6 +8,11 @@ import {
 } from "./helper/check-packages";
 import { findProjectRoot } from "./helper/filesystem";
 
+/**
+ * Main CLI entry point. Handles --init flag for config creation,
+ * validates configured packages, and runs malware detection checks
+ * against package.json, lock files, node_modules, and the dependency tree.
+ */
 async function cli() {
   const args = process.argv;
   if (args.length > 2) {

@@ -32,6 +32,13 @@ function validatePackages(startDir?: string): string[] {
   return config.packages as string[];
 }
 
+/**
+ * Check if a known malware package is listed in the project's package.json.
+ * Supports scoped packages (e.g. @scope/name).
+ * @param projectRoot - Absolute path to the project root directory
+ * @param pkg - Package identifier in "name@version" format
+ * @returns True if the malware package was found in package.json
+ */
 function checkPackageJson(projectRoot: string, pkg: string): boolean {
   const lastAt = pkg.lastIndexOf("@");
   const name = pkg.substring(0, lastAt);
@@ -59,6 +66,13 @@ function checkPackageJson(projectRoot: string, pkg: string): boolean {
   return false;
 }
 
+/**
+ * Check if a known malware package is present in the lock file.
+ * Checks package-lock.json for npm or yarn.lock for yarn.
+ * @param projectRoot - Absolute path to the project root directory
+ * @param pkg - Package identifier in "name@version" format
+ * @returns True if the malware package was found in the lock file
+ */
 function checkLockFile(projectRoot: string, pkg: string): boolean {
   const [name, version] = pkg.split("@");
   const pm = detectPackageManager(projectRoot);
@@ -84,6 +98,13 @@ function checkLockFile(projectRoot: string, pkg: string): boolean {
   return false;
 }
 
+/**
+ * Check if a known malware package is installed in the node_modules directory.
+ * Supports scoped packages (e.g. @scope/name).
+ * @param projectRoot - Absolute path to the project root directory
+ * @param pkg - Package identifier in "name@version" format
+ * @returns True if the malware package was found in node_modules
+ */
 function checkNodeModules(projectRoot: string, pkg: string): boolean {
   const lastAt = pkg.lastIndexOf("@");
   const name = pkg.substring(0, lastAt);
@@ -111,6 +132,13 @@ function checkNodeModules(projectRoot: string, pkg: string): boolean {
   return false;
 }
 
+/**
+ * Check the full dependency tree for a known malware package.
+ * Uses "npm ls --all" or "yarn list --depth=Infinity" depending on the package manager.
+ * @param projectRoot - Absolute path to the project root directory
+ * @param pkg - Package identifier in "name@version" format
+ * @returns True if the malware package was found in the dependency tree
+ */
 async function checkDependencyTree(
   projectRoot: string,
   pkg: string,
