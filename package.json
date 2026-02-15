@@ -2,7 +2,7 @@
   "name": "@krisbyte/nymc",
   "version": "0.1.4",
   "description": "",
-  "main": "nymc.js",
+  "main": "index.js",
   "scripts": {
     "build": "tsc",
     "lint": "eslint .",
