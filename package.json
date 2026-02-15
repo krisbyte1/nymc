@@ -4,7 +4,8 @@
   "description": "",
   "main": "nymc.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "lint": "eslint ."
   },
   "author": "",
   "license": "ISC",
@@ -15,8 +16,18 @@
     "dist",
     "bin"
   ],
+  "lint-staged": {
+    "**/*.{ts}": [
+      "eslint ."
+    ]
+  },
   "devDependencies": {
+    "@eslint/js": "9.39.2",
     "@types/node": "25.0.3",
-    "typescript": "5.9.3"
+    "eslint": "9.39.2",
+    "husky": "9.1.7",
+    "lint-staged": "16.2.7",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.55.0"
   }
 }
