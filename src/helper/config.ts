@@ -1,6 +1,6 @@
 import { findProjectRoot } from "./filesystem";
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 
 /**
  * Create the .nymc/config.json configuration file in the project root.
@@ -23,7 +23,9 @@ function createConfig(force: boolean = false) {
 
   // Create default config
   const defaultConfig = {
-    version: "0.0.1",
+    version: JSON.parse(
+      fs.readFileSync(path.join(projectRoot, "package.json"), "utf8"),
+    ).version,
     packages: [],
   };
 

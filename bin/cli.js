@@ -1,2 +1,2 @@
 #!/usr/bin/env node
-require("../dist/nymc.js");
+import("../dist/nymc.js");
