@@ -28,4 +28,10 @@ function createConfig(force: boolean = false) {
   console.log(`Config created at: ${configFile}`);
 }
 
-export { createConfig };
+function configExists(): boolean {
+  const projectRoot = findProjectRoot();
+  const configFile = path.join(projectRoot, ".nymc", "config.json");
+  return fs.existsSync(configFile);
+}
+
+export { createConfig, configExists };
