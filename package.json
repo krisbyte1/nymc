@@ -8,6 +8,13 @@
   },
   "author": "",
   "license": "ISC",
+  "bin": {
+    "nymc": "./bin/cli.js"
+  },
+  "files": [
+    "dist",
+    "bin"
+  ],
   "devDependencies": {
     "@types/node": "25.0.3",
     "typescript": "5.9.3"

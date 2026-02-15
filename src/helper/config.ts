@@ -2,14 +2,13 @@ import { findProjectRoot } from "./filesystem";
 const fs = require("fs");
 const path = require("path");
 
-function createConfig() {
+function createConfig(force: boolean = false) {
   const projectRoot = findProjectRoot();
   const configDir = path.join(projectRoot, ".nymc");
   const configFile = path.join(configDir, "config.json");
 
   // Check if already exists
-  if (fs.existsSync(configFile)) {
-    console.log("Config already exists. Skipping...");
+  if (!force && fs.existsSync(configFile)) {
     return;
   }
 
