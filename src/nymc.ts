@@ -1,5 +1,10 @@
 import { createConfig, configExists } from "./helper/config";
-import { validatePackages } from "./helper/check-packages";
+import {
+  validatePackages,
+  checkPackageJson,
+  checkLockFile,
+} from "./helper/check-packages";
+import { findProjectRoot } from "./helper/filesystem";
 
 function cli() {
   const args = process.argv;
@@ -19,7 +24,13 @@ function cli() {
     process.exit(1);
   }
 
-  validatePackages();
+  const packages = validatePackages();
+  const projectRoot = findProjectRoot();
+
+  for (const pkg of packages) {
+    checkPackageJson(projectRoot, pkg);
+    checkLockFile(projectRoot, pkg);
+  }
 }
 
 cli();
