@@ -3,10 +3,12 @@ import {
   validatePackages,
   checkPackageJson,
   checkLockFile,
+  checkNodeModules,
+  checkDependencyTree,
 } from "./helper/check-packages";
 import { findProjectRoot } from "./helper/filesystem";
 
-function cli() {
+async function cli() {
   const args = process.argv;
   if (args.length > 2) {
     const thirdParam = args[2];
@@ -26,10 +28,17 @@ function cli() {
 
   const packages = validatePackages();
   const projectRoot = findProjectRoot();
+  let malwareFound = false;
 
   for (const pkg of packages) {
-    checkPackageJson(projectRoot, pkg);
-    checkLockFile(projectRoot, pkg);
+    if (checkPackageJson(projectRoot, pkg)) malwareFound = true;
+    if (checkLockFile(projectRoot, pkg)) malwareFound = true;
+    if (checkNodeModules(projectRoot, pkg)) malwareFound = true;
+    if (await checkDependencyTree(projectRoot, pkg)) malwareFound = true;
+  }
+
+  if (malwareFound) {
+    process.exit(1);
   }
 }
 
