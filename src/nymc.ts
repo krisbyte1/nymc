@@ -33,14 +33,46 @@ async function cli() {
 
   const packages = validatePackages();
   const projectRoot = findProjectRoot();
-  let malwareFound = false;
+
+  const results: {
+    pkg: string;
+    packageJson: boolean;
+    lockFile: boolean;
+    nodeModules: boolean;
+    dependencyTree: boolean;
+  }[] = [];
 
   for (const pkg of packages) {
-    if (checkPackageJson(projectRoot, pkg)) malwareFound = true;
-    if (checkLockFile(projectRoot, pkg)) malwareFound = true;
-    if (checkNodeModules(projectRoot, pkg)) malwareFound = true;
-    if (await checkDependencyTree(projectRoot, pkg)) malwareFound = true;
+    results.push({
+      pkg,
+      packageJson: checkPackageJson(projectRoot, pkg),
+      lockFile: checkLockFile(projectRoot, pkg),
+      nodeModules: checkNodeModules(projectRoot, pkg),
+      dependencyTree: await checkDependencyTree(projectRoot, pkg),
+    });
   }
+
+  console.log("\n--- Scan Results ---\n");
+
+  const malwareFound = results.some(
+    (r) => r.packageJson || r.lockFile || r.nodeModules || r.dependencyTree,
+  );
+
+  for (const r of results) {
+    const detected =
+      r.packageJson || r.lockFile || r.nodeModules || r.dependencyTree;
+    console.log(`${r.pkg}: ${detected ? "MALWARE DETECTED" : "clean"}`);
+    if (detected) {
+      if (r.packageJson) console.log("  - found in package.json");
+      if (r.lockFile) console.log("  - found in lock file");
+      if (r.nodeModules) console.log("  - found in node_modules");
+      if (r.dependencyTree) console.log("  - found in dependency tree");
+    }
+  }
+
+  console.log(
+    `\nScanned ${results.length} package(s): ${malwareFound ? "malware found" : "all clean"}`,
+  );
 
   if (malwareFound) {
     process.exit(1);
