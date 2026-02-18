@@ -21,6 +21,8 @@ This creates a `.nymc/config.json` file in your project root. Add known malware 
 ```json
 {
   "version": "0.0.1",
+  "url": "",
+  "httpsHeader": "",
   "packages": [
     "malicious-pkg@1.0.0",
     "@scope/bad-pkg@2.3.1"
@@ -33,6 +35,28 @@ This creates a `.nymc/config.json` file in your project root. Add known malware 
 ```bash
 nymc
 ```
+
+### Fetch packages from a remote URL
+
+Instead of maintaining a local `packages` list, you can fetch it from a remote endpoint. Set the `url` field in `.nymc/config.json` to point to a JSON API that returns an array of package strings:
+
+```json
+{
+  "url": "https://example.com/malware-list.json",
+  "httpsHeader": "Authorization: Bearer <token>"
+}
+```
+
+- **`url`** – The endpoint that returns a JSON array of `name@version` strings.
+- **`httpsHeader`** – *(Optional)* A single HTTP header to include with the request, formatted as `"Header-Name: value"`. Useful for authenticated endpoints.
+
+Then run the scan with the `--network` flag:
+
+```bash
+nymc --network
+```
+
+When `--network` is used, the remote package list takes precedence over the local `packages` array.
 
 ## How it works
 
