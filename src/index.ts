@@ -1,4 +1,4 @@
-import { createConfig, configExists } from "./helper/config";
+import { createConfig, configExists, fetchPackages } from "./helper/config";
 import {
   validatePackages,
   checkPackageJson,
@@ -15,15 +15,14 @@ import { findProjectRoot } from "./helper/filesystem";
  */
 async function cli() {
   const args = process.argv;
-  if (args.length > 2) {
-    const thirdParam = args[2];
-    if (thirdParam === "--init") {
-      createConfig(true);
-      console.log(
-        "Please add your packages to the packages array in .nymc/config.json",
-      );
-      process.exit(0);
-    }
+  const useNetwork = args.includes("--network");
+
+  if (args.includes("--init")) {
+    createConfig(true);
+    console.log(
+      "Please add your packages to the packages array in .nymc/config.json",
+    );
+    process.exit(0);
   }
 
   if (!configExists()) {
@@ -31,7 +30,7 @@ async function cli() {
     process.exit(1);
   }
 
-  const packages = validatePackages();
+  const packages = useNetwork ? await fetchPackages() : validatePackages();
   const projectRoot = findProjectRoot();
 
   const results: {
