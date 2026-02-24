@@ -4,11 +4,7 @@ on:
   push:
     branches:
       - develop
-  pull_request:
-    types:
-      - closed
-    branches:
-      - develop
+      - master
   workflow_dispatch:
     inputs:
       version:
@@ -24,8 +20,7 @@ jobs:
   bump-version:
     if: >
       github.event_name == 'push' ||
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+      github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -34,7 +29,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: develop
+          ref: ${{ github.ref_name }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -48,7 +43,7 @@ jobs:
 
       - name: Bump version
         run: |
-          BUMP_TYPE="${{ github.event.inputs.version || 'patch' }}"
+          BUMP_TYPE="${{ github.event.inputs.version || (github.ref_name == 'master' && 'minor') || 'patch' }}"
           npm version "$BUMP_TYPE" --no-git-tag-version
           git add package.json package-lock.json
           NEW_VERSION=$(node -p "require('./package.json').version")
