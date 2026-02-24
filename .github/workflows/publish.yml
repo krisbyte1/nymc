@@ -1,17 +1,15 @@
 name: Publish to npm
 
 on:
-  workflow_run:
-    workflows:
-      - Version Bump
+  pull_request:
     branches:
       - master
     types:
-      - completed
+      - closed
 
 jobs:
   publish:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     permissions:
       contents: read
