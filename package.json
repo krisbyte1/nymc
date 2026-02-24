@@ -2,14 +2,18 @@
   "name": "nymc",
   "version": "0.1.11",
   "description": "A npm/yarn malware scanner",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "lint": "eslint .",
     "prepare": "husky",
     "test": "jest"
   },
-  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/krisbyte1/nymc.git"
+  },
+  "author": "krisbyte",
   "license": "MIT",
   "bin": {
     "nymc": "./bin/cli.js"
