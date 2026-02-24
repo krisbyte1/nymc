@@ -1,6 +1,6 @@
 {
   "name": "nymc",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "A npm/yarn malware scanner",
   "main": "index.js",
   "scripts": {
