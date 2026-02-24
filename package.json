@@ -1,6 +1,6 @@
 {
   "name": "@krisbyte/nymc",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "A npm/yarn malware scanner",
   "main": "dist/index.js",
   "scripts": {
