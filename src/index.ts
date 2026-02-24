@@ -8,6 +8,31 @@ import {
 } from "./helper/check-packages";
 import { findProjectRoot } from "./helper/filesystem";
 
+function printHelp() {
+  console.log(`
+nymc - Node Yarn Malware Scanner
+
+Usage:
+  nymc [options]
+
+Options:
+  --init      Create a new .nymc/config.json in the current project root.
+              After running, add the package names you want to monitor to
+              the "packages" array in that config file.
+
+  --network   Fetch the list of packages to scan from the remote source
+              defined in your config, instead of using the local
+              "packages" array.
+
+  --help      Show this help message and exit.
+
+Examples:
+  nymc --init       Initialize config for the current project
+  nymc              Run a scan using packages listed in config
+  nymc --network    Run a scan using packages fetched from the network
+`);
+}
+
 /**
  * Main CLI entry point. Handles --init flag for config creation,
  * validates configured packages, and runs malware detection checks
@@ -16,6 +41,11 @@ import { findProjectRoot } from "./helper/filesystem";
 async function cli() {
   const args = process.argv;
   const useNetwork = args.includes("--network");
+
+  if (args.includes("--help")) {
+    printHelp();
+    process.exit(0);
+  }
 
   if (args.includes("--init")) {
     createConfig(true);
