@@ -10,7 +10,7 @@
     "test": "jest"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "bin": {
     "nymc": "./bin/cli.js"
   },

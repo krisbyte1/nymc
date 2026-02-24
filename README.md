@@ -71,4 +71,4 @@ If any malware is detected, all checks still run to give a complete report befor
 
 ## License
 
-ISC
+MIT
