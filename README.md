@@ -5,7 +5,7 @@ A CLI tool that scans your Node.js project for known malware packages. It checks
 ## Installation
 
 ```bash
-npm install -g @krisbyte/nymc
+npm install @krisbyte/nymc
 ```
 
 ## Usage
