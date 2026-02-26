@@ -191,12 +191,14 @@ describe('checkLockFile', () => {
   });
 
   it('uses package-lock.json for npm and yarn.lock for yarn', () => {
-    mockDetectPM.mockReturnValue('yarn');
-    mockFs.existsSync.mockReturnValue(false);
-    checkLockFile(ROOT, 'malware@1.0.0');
-    expect(mockFs.existsSync).toHaveBeenCalledWith('/project/yarn.lock');
+    for (const pm of ['yarn-classic', 'yarn-modern'] as const) {
+      mockDetectPM.mockReturnValue(pm);
+      mockFs.existsSync.mockReturnValue(false);
+      checkLockFile(ROOT, 'malware@1.0.0');
+      expect(mockFs.existsSync).toHaveBeenCalledWith('/project/yarn.lock');
+      jest.clearAllMocks();
+    }
 
-    jest.clearAllMocks();
     mockDetectPM.mockReturnValue('npm');
     mockFs.existsSync.mockReturnValue(false);
     checkLockFile(ROOT, 'malware@1.0.0');
@@ -276,12 +278,21 @@ describe('checkDependencyTree', () => {
     );
   });
 
-  it('uses the correct yarn list command', async () => {
-    mockDetectPM.mockReturnValue('yarn');
+  it('uses the correct yarn list command for yarn-classic', async () => {
+    mockDetectPM.mockReturnValue('yarn-classic');
     mockExecuteCommand.mockResolvedValue({ stdout: '', stderr: '', exitCode: 0 });
     await checkDependencyTree(ROOT, 'malware@1.0.0');
     expect(mockExecuteCommand).toHaveBeenCalledWith(
-      `yarn --cwd ${ROOT} list --pattern malware --depth=Infinity`,
+      `yarn list --pattern malware --depth=Infinity`,
+    );
+  });
+
+  it('uses the correct yarn info command for yarn-modern', async () => {
+    mockDetectPM.mockReturnValue('yarn-modern');
+    mockExecuteCommand.mockResolvedValue({ stdout: '', stderr: '', exitCode: 0 });
+    await checkDependencyTree(ROOT, 'malware@1.0.0');
+    expect(mockExecuteCommand).toHaveBeenCalledWith(
+      `yarn info malware --all --recursive`,
     );
   });
 

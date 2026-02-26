@@ -76,7 +76,7 @@ function checkPackageJson(projectRoot: string, pkg: string): boolean {
 function checkLockFile(projectRoot: string, pkg: string): boolean {
   const [name, version] = pkg.split("@");
   const pm = detectPackageManager(projectRoot);
-  const lockFileName = pm === "yarn" ? "yarn.lock" : "package-lock.json";
+  const lockFileName = pm === "yarn-classic" || pm === "yarn-modern" ? "yarn.lock" : "package-lock.json";
   const lockFilePath = path.join(projectRoot, lockFileName);
 
   if (!fs.existsSync(lockFilePath)) {
@@ -145,10 +145,14 @@ async function checkDependencyTree(
 ): Promise<boolean> {
   const [name, version] = pkg.split("@");
   const pm = detectPackageManager(projectRoot);
-  const command =
-    pm === "yarn"
-      ? `yarn --cwd ${projectRoot} list --pattern ${name} --depth=Infinity`
-      : `npm ls ${name} --prefix ${projectRoot} --all`;
+  let command: string;
+  if (pm === "yarn-classic") {
+    command = `yarn list --pattern ${name} --depth=Infinity`;
+  } else if (pm === "yarn-modern") {
+    command = `yarn info ${name} --all --recursive`;
+  } else {
+    command = `npm ls ${name} --prefix ${projectRoot} --all`;
+  }
 
   const result = await executeCommand(command);
   const output = result.stdout + result.stderr;
