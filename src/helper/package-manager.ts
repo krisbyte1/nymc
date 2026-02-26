@@ -2,7 +2,7 @@ import path from "path";
 import fs from "fs";
 import { findProjectRoot } from "./filesystem";
 
-export type PackageManager = "npm" | "yarn";
+export type PackageManager = "npm" | "yarn-classic" | "yarn-modern";
 
 /**
  * Detect whether the project uses npm or yarn as its package manager.
@@ -14,7 +14,9 @@ function detectPackageManager(startDir?: string): PackageManager {
   const projectRoot = findProjectRoot(startDir);
 
   if (fs.existsSync(path.join(projectRoot, "yarn.lock"))) {
-    return "yarn";
+    return fs.existsSync(path.join(projectRoot, ".yarnrc.yml"))
+      ? "yarn-modern"
+      : "yarn-classic";
   }
 
   return "npm";

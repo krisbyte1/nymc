@@ -14,9 +14,14 @@ describe('detectPackageManager', () => {
     jest.clearAllMocks();
   });
 
-  it('returns "yarn" when yarn.lock exists in the project root', () => {
+  it('returns "yarn-classic" when yarn.lock exists but .yarnrc.yml does not', () => {
+    mockFs.existsSync.mockImplementation((p) => String(p).endsWith('yarn.lock'));
+    expect(detectPackageManager('/project')).toBe('yarn-classic');
+  });
+
+  it('returns "yarn-modern" when both yarn.lock and .yarnrc.yml exist', () => {
     mockFs.existsSync.mockReturnValue(true);
-    expect(detectPackageManager('/project')).toBe('yarn');
+    expect(detectPackageManager('/project')).toBe('yarn-modern');
   });
 
   it('returns "npm" when yarn.lock does not exist', () => {
