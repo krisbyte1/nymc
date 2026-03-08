@@ -5,8 +5,9 @@ import {
   checkLockFile,
   checkNodeModules,
   checkDependencyTree,
+  checkMonorepoWorkspaces,
 } from "./helper/check-packages";
-import { findProjectRoot } from "./helper/filesystem";
+import { findProjectRoot, findMonorepoWorkspaces } from "./helper/filesystem";
 
 function printHelp() {
   console.log(`
@@ -81,6 +82,12 @@ async function cli() {
     });
   }
 
+  // --- Monorepo workspace scan ---
+  const workspaceDirs = findMonorepoWorkspaces(projectRoot);
+  const workspaceResults = workspaceDirs.length > 0
+    ? checkMonorepoWorkspaces(projectRoot, packages)
+    : [];
+
   console.log("\n--- Scan Results ---\n");
 
   const malwareFound = results.some(
@@ -102,6 +109,40 @@ async function cli() {
   console.log(
     `\nScanned ${results.length} package(s): ${malwareFound ? "malware found" : "all clean"}`,
   );
+
+  if (workspaceResults.length > 0) {
+    const workspaceMalwareFound = workspaceResults.some(
+      (r) => r.packageJson || r.lockFile,
+    );
+
+    console.log(`\n--- Monorepo Workspace Scan (${workspaceDirs.length} workspace(s)) ---\n`);
+
+    const byWorkspace = new Map<string, typeof workspaceResults>();
+    for (const r of workspaceResults) {
+      if (!byWorkspace.has(r.workspace)) byWorkspace.set(r.workspace, []);
+      byWorkspace.get(r.workspace)!.push(r);
+    }
+
+    for (const [workspace, wsResults] of byWorkspace) {
+      const label = workspace.replace(projectRoot, "").replace(/^\//, "") || workspace;
+      const wsDetected = wsResults.some((r) => r.packageJson || r.lockFile);
+      console.log(`[${label}]: ${wsDetected ? "MALWARE DETECTED" : "clean"}`);
+      if (wsDetected) {
+        for (const r of wsResults) {
+          if (r.packageJson) console.log(`  - ${r.pkg}: found in package.json`);
+          if (r.lockFile) console.log(`  - ${r.pkg}: found in lock file`);
+        }
+      }
+    }
+
+    console.log(
+      `\nScanned ${workspaceDirs.length} workspace(s): ${workspaceMalwareFound ? "malware found" : "all clean"}`,
+    );
+
+    if (workspaceMalwareFound) {
+      process.exit(1);
+    }
+  }
 
   if (malwareFound) {
     process.exit(1);

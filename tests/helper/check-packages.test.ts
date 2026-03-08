@@ -6,11 +6,13 @@ import {
   checkLockFile,
   checkNodeModules,
   checkDependencyTree,
+  checkMonorepoWorkspaces,
 } from '../../src/helper/check-packages';
 
 jest.mock('fs');
 jest.mock('../../src/helper/filesystem', () => ({
   findProjectRoot: jest.fn().mockReturnValue('/project'),
+  findMonorepoWorkspaces: jest.fn().mockReturnValue([]),
 }));
 jest.mock('../../src/helper/package-manager', () => ({
   detectPackageManager: jest.fn().mockReturnValue('npm'),
@@ -21,11 +23,13 @@ jest.mock('../../src/helper/command', () => ({
 
 import { detectPackageManager } from '../../src/helper/package-manager';
 import { executeCommand } from '../../src/helper/command';
+import { findMonorepoWorkspaces } from '../../src/helper/filesystem';
 
 const mockFs = fs as jest.Mocked<typeof fs>;
 const mockDetectPM = detectPackageManager as jest.Mock;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mockExecuteCommand = executeCommand as jest.Mock<(...args: any[]) => Promise<any>>;
+const mockFindMonorepoWorkspaces = findMonorepoWorkspaces as jest.Mock;
 
 // ---------------------------------------------------------------------------
 // validatePackages
@@ -307,4 +311,83 @@ describe('checkDependencyTree', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// checkMonorepoWorkspaces
+// ---------------------------------------------------------------------------
+describe('checkMonorepoWorkspaces', () => {
+  const ROOT = '/project';
 
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockDetectPM.mockReturnValue('npm');
+  });
+
+  it('returns empty array when no workspaces are found', () => {
+    mockFindMonorepoWorkspaces.mockReturnValue([]);
+    expect(checkMonorepoWorkspaces(ROOT, ['malware@1.0.0'])).toEqual([]);
+  });
+
+  it('returns a result for each workspace × package combination', () => {
+    mockFindMonorepoWorkspaces.mockReturnValue(['/project/packages/app', '/project/packages/lib']);
+    // package.json exists but does not contain the malware package
+    mockFs.existsSync.mockReturnValue(true);
+    mockFs.readFileSync.mockReturnValue(JSON.stringify({ dependencies: {} }));
+
+    const results = checkMonorepoWorkspaces(ROOT, ['malware@1.0.0', 'evil@2.0.0']);
+    expect(results).toHaveLength(4); // 2 workspaces × 2 packages
+  });
+
+  it('detects malware in a workspace package.json', () => {
+    mockFindMonorepoWorkspaces.mockReturnValue(['/project/packages/app']);
+    mockFs.existsSync.mockImplementation((p) => {
+      // package.json exists; lock file does not
+      return (p as string).endsWith('package.json');
+    });
+    mockFs.readFileSync.mockReturnValue(
+      JSON.stringify({ dependencies: { malware: '1.0.0' } }),
+    );
+
+    const results = checkMonorepoWorkspaces(ROOT, ['malware@1.0.0']);
+    expect(results).toHaveLength(1);
+    expect(results[0]!.packageJson).toBe(true);
+    expect(results[0]!.lockFile).toBe(false);
+  });
+
+  it('detects malware in a workspace lock file', () => {
+    mockFindMonorepoWorkspaces.mockReturnValue(['/project/packages/lib']);
+    mockFs.existsSync.mockImplementation((p) => {
+      const s = p as string;
+      // package.json exists (but clean); lock file exists
+      return s.endsWith('package.json') || s.endsWith('package-lock.json');
+    });
+    mockFs.readFileSync.mockImplementation((p) => {
+      if ((p as string).endsWith('package-lock.json')) {
+        return 'malware@1.0.0';
+      }
+      return JSON.stringify({ dependencies: {} });
+    });
+
+    const results = checkMonorepoWorkspaces(ROOT, ['malware@1.0.0']);
+    expect(results[0]!.lockFile).toBe(true);
+    expect(results[0]!.packageJson).toBe(false);
+  });
+
+  it('skips package.json check when workspace has no package.json', () => {
+    mockFindMonorepoWorkspaces.mockReturnValue(['/project/packages/empty']);
+    // package.json does NOT exist; lock file also absent
+    mockFs.existsSync.mockReturnValue(false);
+
+    const results = checkMonorepoWorkspaces(ROOT, ['malware@1.0.0']);
+    expect(results[0]!.packageJson).toBe(false);
+    expect(results[0]!.lockFile).toBe(false);
+  });
+
+  it('includes the workspace path in each result', () => {
+    mockFindMonorepoWorkspaces.mockReturnValue(['/project/packages/app']);
+    mockFs.existsSync.mockReturnValue(false);
+
+    const results = checkMonorepoWorkspaces(ROOT, ['malware@1.0.0']);
+    expect(results[0]!.workspace).toBe('/project/packages/app');
+    expect(results[0]!.pkg).toBe('malware@1.0.0');
+  });
+});

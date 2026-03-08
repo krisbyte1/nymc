@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs";
-import { findProjectRoot } from "./filesystem";
+import { findProjectRoot, findMonorepoWorkspaces } from "./filesystem";
 import { detectPackageManager } from "./package-manager";
 import { executeCommand } from "./command";
 
@@ -167,10 +167,56 @@ async function checkDependencyTree(
   return false;
 }
 
+export interface WorkspaceScanResult {
+  workspace: string;
+  pkg: string;
+  packageJson: boolean;
+  lockFile: boolean;
+}
+
+/**
+ * Scan all monorepo workspace packages for known malware.
+ * Detects workspaces from the root package.json "workspaces" field and checks
+ * each workspace's own package.json and lock file (if present).
+ * @param projectRoot - Absolute path to the monorepo root directory
+ * @param packages - Package identifiers to check (name@version format)
+ * @returns Array of per-workspace, per-package scan results
+ */
+function checkMonorepoWorkspaces(
+  projectRoot: string,
+  packages: string[],
+): WorkspaceScanResult[] {
+  const workspaceDirs = findMonorepoWorkspaces(projectRoot);
+
+  if (workspaceDirs.length === 0) {
+    return [];
+  }
+
+  const results: WorkspaceScanResult[] = [];
+
+  for (const workspaceDir of workspaceDirs) {
+    const hasPackageJson = fs.existsSync(
+      path.join(workspaceDir, "package.json"),
+    );
+
+    for (const pkg of packages) {
+      results.push({
+        workspace: workspaceDir,
+        pkg,
+        packageJson: hasPackageJson ? checkPackageJson(workspaceDir, pkg) : false,
+        lockFile: checkLockFile(workspaceDir, pkg),
+      });
+    }
+  }
+
+  return results;
+}
+
 export {
   validatePackages,
   checkPackageJson,
   checkLockFile,
   checkNodeModules,
   checkDependencyTree,
+  checkMonorepoWorkspaces,
 };
