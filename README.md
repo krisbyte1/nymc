@@ -58,14 +58,41 @@ nymc --network
 
 When `--network` is used, the remote package list takes precedence over the local `packages` array.
 
+## Monorepo support
+
+nymc automatically detects monorepo workspaces defined in the root `package.json`. Both workspace declaration formats are supported:
+
+**Array form** (npm workspaces, Yarn modern):
+```json
+{
+  "workspaces": ["packages/*", "apps/*"]
+}
+```
+
+**Object form** (Yarn classic):
+```json
+{
+  "workspaces": {
+    "packages": ["packages/*", "apps/*"]
+  }
+}
+```
+
+When workspaces are detected, nymc runs an additional scan across every workspace directory, checking each workspace's `package.json` and lock file for malicious packages. Results are grouped and reported per workspace after the root scan.
+
 ## How it works
 
-For each package in the configuration, nymc runs four checks:
+For each package in the configuration, nymc runs four checks against the project root:
 
 1. **package.json** - Checks if the package is listed in `dependencies` or `devDependencies`
 2. **Lock file** - Checks `package-lock.json` (npm) or `yarn.lock` (yarn) for the package
 3. **node_modules** - Checks if the package is physically installed with the matching version
 4. **Dependency tree** - Runs `npm ls --all` or `yarn list --depth=Infinity` to find the package in nested dependencies
+
+For monorepo workspaces, two additional checks run per workspace:
+
+1. **package.json** - Checks the workspace's own `package.json`
+2. **Lock file** - Checks for a lock file local to the workspace directory
 
 If any malware is detected, all checks still run to give a complete report before exiting with code 1.
 
